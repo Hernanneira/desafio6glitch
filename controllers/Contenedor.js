@@ -1,96 +1,65 @@
-const {promises: fs} = require ('fs')
+import knexLib from 'knex'
 
-class Contenedor {
-    constructor(route) {
-        this.route = route
+export default class Contenedor {
+    constructor(config) {
+        this.knex = knexLib(config)
     }
+
+    async createTable() {
+        return this.knex.schema.dropTableIfExists('articulos')
+        .finally(()=>{
+            return this.knex.schema.createTable('articulos', table => {
+                table.increments('id_articulo').primary();
+                table.string('title').notNullable();
+                table.string('price');
+                table.string('thumbnail');
+            })
+        })
+    }
+
     async getAll() {
         try {
-            const content = JSON.parse(await fs.readFile(`./productos.json`,'utf-8')) // que paso con this.route
-            return content
+            return this.knex('articulos').select('*');
         } catch (error) {
             return []
         }
     }
     async getById(id){
         try {
-            const content = JSON.parse(await fs.readFile(`./productos.json`,'utf-8'))
-            const elementosFiltrados = content.filter(e => e.id === (parseInt(id)))
-            if(elementosFiltrados.length === 0){
-                return({ error : 'producto no encontrado' })
-            } else {
-                return(elementosFiltrados)
-            }
+            return this.knex('articulos').select('*').where('id_articulo', id)
         } catch (error) {
-            res.send(error)
+            return(error)
             null
         }
     }
-    async save(title, price, thumbnail) {
+    async save(newArticulo) {
         try {
-            const content = JSON.parse(await fs.readFile(`./productos.json`,'utf-8'))
-            let newId;
-            if(content.length == 0){
-                newId = 1;
-            }else {
-                newId = content[content.length - 1].id + 1;
-            }
-            const newObj = {
-                title: title,
-                price: price,
-                thumbnail: thumbnail,
-                id: newId
-            }
-            content.push(newObj);
-            await fs.writeFile(`./productos.json`,JSON.stringify(content, null, 2))
-            return(newObj)
+            return  await this.knex('articulos').insert(newArticulo)
         } catch (error) {
             return(error)
         }
     }
 
-    async update(title, price, thumbnail,id) {
+    async update(id, articulos) {
         try{
-            const content = JSON.parse(await fs.readFile(`./productos.json`,'utf-8'))
-            let identificacion = Number(id)
-            let index = content.findIndex(prod => prod.id === identificacion)
-            const newProduct = {title, price, thumbnail, "id": identificacion};
-            if(index === -1 ) {
-                res.send({ error : 'producto no encontrado' }
-                ) 
-            } else {
-                content[index] = newProduct
-            }
-            await fs.writeFile(`./productos.json`,JSON.stringify(content, null, 2))
-            return(content);
+            return this.knex('articulos').where('id_articulo', id).update(articulos)
         } catch (error) {
             return(error)
         }
     }
     async deleteAll(){
         try {
-            await fs.writeFile(`./$productos.json`,JSON.stringify([], null, 2))
-            const content = JSON.parse(await fs.readFile(`./productos.json`,'utf-8'))
-            console.log(content)
+            return this.knex('articulos').select('*').del();
         } catch (error) {
-            console.log(error)
-            return "no pudo eliminarse"
+            return (error)
         }
     }
     async deleteById (id) {
         try {
-            const content = JSON.parse(await fs.readFile(`./productos.json`,'utf-8'))
-            const elementosFiltrados = content.filter(e => e.id !== parseInt(id))
-            if(elementosFiltrados.length === (content.length)){
-                return({ error : 'producto no encontrado' })
-            } else {
-                await fs.writeFile(`./productos.json`,JSON.stringify(elementosFiltrados, null, 2))
-                return(elementosFiltrados)
-            }
+            return this.knex('articulos').where('id_articulos', id).del();
         } catch (error) {
             return(error)
         }
     }
 }
 
-module.exports = Contenedor

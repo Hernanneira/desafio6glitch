@@ -12,10 +12,10 @@
             <tbody id="trTable">
                 <% listProd.forEach(prod => { %>
                     <tr>
-                        <td> <%= prod.id %> </td>
+                        <td> <%= prod.id_articulo %> </td>
                         <td> <%= prod.title %> </td>
                         <td> <%= prod.price %> </td>
-                        <td> <img src="<%= prod.url %>" alt="<%= prod.title %>" width="25"> </td>
+                        <td> <img src="<%= prod.thumbnail %>" alt="<%= prod.title %>" width="25"> </td>
                     </tr>
                 <% }) %>
             </tbody>

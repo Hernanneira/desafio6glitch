@@ -1,33 +1,36 @@
-const {promises: fs} = require ('fs')
-const moment = require('moment')
+import knexLib from 'knex'
 
-class Chats {
-    constructor(route) {
-        this.route = route
+export default class Chats {
+    constructor(options) {
+        this.knex = knexLib(options)
     }
+
+    async createTable() {
+        return this.knex.schema.dropTableIfExists('chats')
+        .finally(()=>{
+            return this.knex.schema.createTable('chats', table => {
+                table.increments('id_chat').primary();
+                table.string('email');
+                table.string('textoMensaje');
+                table.string('date')
+            })
+        })
+    }
+
     async getAllChats() {
         try {
-            const content = JSON.parse(await fs.readFile(`./chats.json`,'utf-8'))
-            return content
+            return this.knex('chats').select('*');
         } catch (error) {
             return []
         }
     }
-    async saveChats(data){
-        try{
-            const newMessage = {
-                email: data.email,
-                textoMensaje: data.textoMensaje,
-                date: moment().format('L LTS')
-            }
-            const loadedMessage = await this.getAllChats()
-            loadedMessage.push(newMessage)
-            await fs.writeFile(`./chats.json`, JSON.stringify(loadedMessage ,null, 2))
-            return loadedMessage
-        }catch(e){
-            throw new Error(e.message)
-            }
-        }
-}
 
-module.exports = Chats
+    async save(newMessage) {
+        try {
+            await this.knex('chats').insert(newMessage)
+            return await this.knex('chats').select('*')
+        } catch (error) {
+            return(error)
+        }
+    }
+}

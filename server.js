@@ -1,16 +1,20 @@
-const express = require('express')
-const { Server: HttpServer } = require('http')
-const { Server: IOServer } = require('socket.io')
-
-
-const Contenedor = require('./controllers/Contenedor')
-const ProductoController = new Contenedor('productos.json')
-const Chats = require('./controllers/Chats')
-const historial = new Chats('chats.json')
+import express from 'express'
 const app = express()
 
-const httpServer = new HttpServer(app)
-const io = new IOServer(httpServer)
+import { createServer } from "http";
+import { Server } from "socket.io";
+
+import { config } from './config/mariaDB.js'
+import { options } from './config/sqlite3.js'
+import Contenedor from './controllers/Contenedor.js'
+
+const ProductoController = new Contenedor(config)
+
+import Chats from './controllers/Chats.js'
+const historial = new Chats(options)
+
+const httpServer = new createServer(app)
+const io = new Server(httpServer)
 
 app.set('view engine', 'ejs')
 app.set('views', './public/views');
@@ -18,6 +22,84 @@ app.set('views', './public/views');
 app.use(express.static('public'))
 app.use(express.json())
 app.use(express.urlencoded({extended:true}));
+
+//mySQL Productos
+
+ProductoController.createTable()
+    .then(()=>{
+        console.log('tabla Articulos creada');
+
+        const articulos = [
+            {
+                "title": "Escuadra",
+                "price": 123.45,
+                "thumbnail": "https://cdn3.iconfinder.com/data/icons/education-209/64/ruler-triangle-stationary-school-256.png",
+                "id_articulo": 1
+            },
+            {
+                "title": "Calculadora",
+                "price": 234.56,
+                "thumbnail": "https://cdn3.iconfinder.com/data/icons/education-209/64/calculator-math-tool-school-256.png",
+                "id_articulo": 2
+            },
+            {
+                "title": "Globo Terráqueo",
+                "price": 345.67,
+                "thumbnail": "https://cdn3.iconfinder.com/data/icons/education-209/64/globe-earth-geograhy-planet-school-256.png",
+                "id_articulo": 3
+            },
+        ]
+        return ProductoController.save(articulos)
+    })
+    .then(()=>{
+        console.log('articulos insertados');
+    })
+    .catch((error)=> {
+        console.log(error);
+        throw error ;
+    })
+    // .finally(() => {
+    //     ProductoController.close();
+    // });
+
+//SQLITE3 Chats
+
+historial.createTable()
+    .then(()=>{
+        console.log('tabla chats creada');
+
+        const chats = [
+            {
+                "email": "Loquito",
+                "date": "11/11/22",
+                "textoMensaje": "Holis",
+                "id_chat": 1
+            },
+            {
+                "email": "Loquita",
+                "date": "11/11/22",
+                "textoMensaje": "Hola",
+                "id_chat": 2
+            },
+            {
+                "email": "MadMan",
+                "date": "11/11/22",
+                "textoMensaje": "como va?",
+                "id_chat": 3
+            },
+        ]
+        return historial.save(chats)
+    })
+    .then(()=>{
+        console.log('Chats insertados');
+    })
+    .catch((error)=> {
+        console.log(error);
+        throw error ;
+    })
+    // .finally(() => {
+    //     ProductoController.close();
+    // });
 
 //webSocket
 io.on('connection', async (socket) => {
@@ -37,7 +119,12 @@ io.on('connection', async (socket) => {
     socket.emit('messages', messages);
 
     socket.on('messegesNew', async (data) => {
-    const historialSave = await historial.saveChats(data)
+        const newMessage = {
+            email: data.email,
+            textoMensaje: data.textoMensaje,
+            date: new Date
+        }
+        const historialSave = await historial.save(newMessage)
         io.sockets.emit('messages', historialSave);
     });
 });
@@ -56,8 +143,12 @@ app.get('/:id', async (req,res,next) => {
 
 app.post('/', async (req, res, next) => {
     const { title, price, thumbnail } = req.body
-    const newProducto = await ProductoController.save(title, price, thumbnail)
-    console.log(newProducto)
+    const newArticulo = {
+        title: title,
+        price: price,
+        thumbnail: thumbnail
+    }
+    const newProducto = await ProductoController.save(newArticulo)
     const productos = await ProductoController.getAll()
     res.render('pages/index', {productos})
 })
@@ -66,7 +157,6 @@ app.put('/:id',async (req, res, next) => {
     const { title, price, thumbnail } = req.body
     const { id } = req.params;
     const upDateProducto = await ProductoController.update(title, price, thumbnail,id)
-    console.log(upDateProducto)
     const productos = await ProductoController.getAll()
     res.render('pages/index', {productos})
 })

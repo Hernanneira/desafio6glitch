@@ -16,7 +16,8 @@ async function loadProds(listProd) {
     document.getElementById('tabla').innerHTML = htmlProd; 
 }
 
-document.getElementById('btn').addEventListener('click', () => {
+document.getElementById('btn').addEventListener('click', (e) => {
+
     const nuevoProducto = {
         title: document.getElementById('title').value,
         price: document.getElementById('price').value,
