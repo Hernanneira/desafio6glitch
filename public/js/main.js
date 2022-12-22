@@ -6,7 +6,7 @@ socket.on("productos", listaProductos => {
 
 async function loadProds(listProd) {
     let htmlProd = ''
-    const tableList = await fetch('views/partials/table.ejs').then(res => res.text())
+    const tableList = await fetch('../views/partials/table.ejs').then(res => res.text())
     if (listProd.length === 0){
         htmlProd = `<h4>No se encontraron productos.</h4>`
     }else{
@@ -31,9 +31,10 @@ socket.on('messages', function(data) { render(data); });
 function render(data) {
     const html = data.map((elem, index) => {
         return(`<div>
-            <strong style="color:blue">${elem.email}</strong>:
+            <strong style="color:blue">${elem.author.id}</strong>:
             <p>${elem.date}<p>
-            <i style="color:green">${elem.textoMensaje}</i> </div>`)
+            <i style="color:green">${elem.textoMensaje}</i> </div>
+            `)
     }).join(" ");
     document.getElementById('messages').innerHTML = html;
 }
@@ -45,10 +46,19 @@ document.getElementById('formChat').addEventListener('submit', (e) => {
 
 function agregarMensaje() {
     const nuevoMensaje = {
-        email: document.getElementById('email').value,
+        author:{
+            email: document.getElementById('email').value,
+            nombre: document.getElementById('nombre').value,
+            apellido: document.getElementById('apellido').value,
+            edad: document.getElementById('edad').value,
+            alias: document.getElementById('alias').value,
+            avatar: document.getElementById('avatar').value,
+        },
         textoMensaje: document.getElementById('textoMensaje').value
+
     }
     socket.emit("messegesNew",nuevoMensaje)
+    console.log(nuevoMensaje)
 }
 
 
