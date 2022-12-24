@@ -134,6 +134,7 @@ io.on('connection', async (socket) => {
 
 // mensajes
     const messages = await mensajeController.getAll()
+    console.log(messages)
     socket.emit('messages', messages);
 
     socket.on('messegesNew', async (data) => {

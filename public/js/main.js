@@ -30,10 +30,11 @@ socket.on('messages', function(data) { render(data); });
 
 function render(data) {
     const html = data.map((elem, index) => {
+        console.log(data)
         return(`<div>
             <strong style="color:blue">${elem.author.id}</strong>:
             <p>${elem.date}<p>
-            <i style="color:green">${elem.textoMensaje}</i> </div>
+            <i style="color:green">${elem.text}</i> </div>
             `)
     }).join(" ");
     document.getElementById('messages').innerHTML = html;
