@@ -1,27 +1,77 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
-import { normalize, schema, denormalize} from 'normalizr';
 
-const MensajesScheme = new Schema(
-    {
+// const MensajesScheme = new Schema(
+//     {
+//     author: {
+//         id: { type: String, required: true },
+//         nombre: { type: String, required: true },
+//         apellido: { type: String, required: true },
+//         edad: { type: Number, required: true },
+//         alias: { type: String, required: true },
+//         avatar: { type: String, required: true }
+//     },
+//     date: { type: String, required: true },
+//     text: { type: String, required: true }
+//     })
+
+const MensajesScheme = new Schema({
     author: {
-        id: { type: String, required: true },
-        nombre: { type: String, required: true },
-        apellido: { type: String, required: true },
-        edad: { type: Number, required: true },
-        alias: { type: String, required: true },
-        avatar: { type: String, required: true }
+        type: Object,
+        required: true
     },
-    date: { type: String, required: true },
-    text: { type: String, required: true }
-    })
+    date: { 
+        type: String, 
+        required: true },
+    text: {
+        type: String,
+        required: true
+    }
+})
 
-// const MensajesScheme = new Schema({
-//     chats: { type: String, required: true }
-// // })
+// const MensajesScheme = {
+//     id: { type: String, required: true },
+//     mensajes: {
+//                 type: Object,
+//                 required: true
+//             }
+// }
+
 // const productosDAO = mongoose.model('mensajes', MensajesScheme)
 console.log("db mongoose conectada")
 // inserto algo para probar que levanta
+
+// await mongoose.connect('mongodb://localhost:27017/mensajes', {
+//             useNewUrlParser: true,
+//             useUnifiedTopology: true,
+//             serverSelectionTimeoutMS: 5000,
+//         });
+//         const chatHernan = [{
+//                 id: 'mensajes',
+//                 mensajes:[{
+//                     author: {
+//                         id: "data.author.email,",
+//                         nombre: "data.author.nombre,",
+//                         apellido: "data.author.apellido,",
+//                         edad: "data.author.edad,",
+//                         alias: "data.author.alias,",
+//                         avatar: "data.author.avatar"
+//                     },
+//                     date: "2022",
+//                     text: "PROBANDOOOO"
+//                 }]      
+//             }
+//         ]
+//             const inserciones = [];
+//             for (const prod of chatHernan) {
+//                 inserciones.push(productosDAO.create(prod))
+//             }
+//             const results = await Promise.allSettled(inserciones)
+//             console.log(chatHernan)
+//             console.log(inserciones)
+//             console.log(results)
+//             await mongoose.disconnect();
+
 // await mongoose.connect('mongodb://localhost:27017/mensajes', {
 //             useNewUrlParser: true,
 //             useUnifiedTopology: true,
@@ -49,6 +99,7 @@ console.log("db mongoose conectada")
 //             console.log(inserciones)
 //             console.log(results)
 //             await mongoose.disconnect();
+
 class Mensaje {
         productosDAO = mongoose.model('mensajes', MensajesScheme);
 
@@ -66,30 +117,22 @@ class Mensaje {
 
     async getAll() {
         try {
-            this.connect()
+            await this.connect()
             const content = await this.productosDAO.find({})
-            this.disconnect()
+            await this.disconnect()
             return content
         } catch (error) {
-            return []
+            return(error)
         }
     }
     
     async save(newMessage) {
         try {
-            this.connect()
-            // const chat = new schema.Entity('chat');
-            // const author = new schema.Entity('author');
-            // const date = new schema.Entity('date');
-            // const chats = new schema.Entity('chats', {
-            //     author: newMessage.author,
-            //     date: newMessage.date,
-            //     text: newMessage.chat,
-            // })
-
-            const newProduct = await this.productosDAO.insertMany(newMessage)
-            this.disconnect()
-            return newProduct
+            await this.connect()
+            await this.productosDAO.create(newMessage)
+            const content = await this.getAll()
+            await this.disconnect()
+            return content
             }
         catch (error) {
             return(error)
@@ -112,8 +155,6 @@ class Mensaje {
     //         return({error})
     //     }
     // }
-
-    
 
     // async update(timestamp, nombre, descripcion, código, foto, precio, stock, id) {
     //     try{
